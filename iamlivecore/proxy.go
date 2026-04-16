@@ -436,7 +436,7 @@ type ActionCandidate struct {
 	Service   string
 }
 
-func handleAWSRequest(req *http.Request, body []byte, respCode int) {
+func ParseAWSRequest(req *http.Request, body []byte, respCode int, entry *Entry) {
 	host := req.Host
 	host = strings.TrimSuffix(host, ".cn")
 	uri := req.RequestURI
@@ -797,7 +797,7 @@ func handleAWSRequest(req *http.Request, body []byte, respCode int) {
 		service = selectedCandidate.Service
 	}
 
-	callLog = append(callLog, Entry{
+	*entry = Entry{
 		Region:              region,
 		Type:                "ProxyCall",
 		Service:             service,
@@ -808,7 +808,15 @@ func handleAWSRequest(req *http.Request, body []byte, respCode int) {
 		AccessKey:           accessKey,
 		SessionToken:        sessionToken,
 		Host:                host,
-	})
+	}
+}
+
+func handleAWSRequest(req *http.Request, body []byte, respCode int) {
+	var entry Entry
+
+	ParseAWSRequest(req, body, respCode, &entry)
+
+	callLog = append(callLog, entry)
 
 	handleLoggedCall()
 }
